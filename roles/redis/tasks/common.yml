@@ -1,0 +1,33 @@
+
+- name: copy package and unarchive to remote machine
+  unarchive:
+    src: "output.tgz"
+    dest: "{{ deploy_dir }}"
+    remote_src: no
+    creates: "{{ base_dir }}"
+
+- name: "check if {{ package_dir }} exits "
+  stat: 
+    path: "{{ package_dir }}"
+  register: src_stat
+
+- name: "check if {{ base_dir }} exits"
+  stat:
+    path: "{{ base_dir }}"
+  register: dest_stat
+
+- name: "copy {{ package_dir }} to {{ base_dir }}"
+  command: "cp -r {{ package_dir }} {{ base_dir }}"
+  when: src_stat.stat.exists and not dest_stat.stat.exists
+
+- name: create deploy directories if not exits
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ pidfile_dir }}"
+    - "{{ logfile_dir }}"
+    - "{{ data_dir }}"
+    - "{{ conf_dir }}"
+    - "{{ script_dir }}"

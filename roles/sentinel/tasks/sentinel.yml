@@ -1,0 +1,96 @@
+
+- name: create depoly dir if not exits
+  file:
+    path: "{{ item }}"
+    mode: 0755
+    force: no
+    state: directory
+  with_items:
+    - "{{ deploy_dir }}"
+
+- name: cp package and unarchive to remote machine
+  unarchive:
+    src: output.tgz
+    dest: "{{ deploy_dir }}"
+    remote_src: no
+    creates: "{{ sentinel_base_dir }}"
+
+- name: "check if {{ package_dir }} exits "
+  stat:
+    path: "{{ package_dir }}"
+  register: src_stat
+
+- name: "check if {{ sentinel_base_dir }} exits"
+  stat:
+    path: "{{ sentinel_base_dir }}"
+  register: dest_stat
+
+- name: copy {{ package_dir }} to sentinel_base_dir
+  command: "cp -r {{ package_dir }} {{ sentinel_base_dir }}"
+  when: src_stat.stat.exists and not dest_stat.stat.exists
+
+- name: create deploy directories if not exits
+  file: 
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    force: no
+  with_items:
+    - "{{ conf_dir }}"
+    - "{{ logfile_dir }}"
+    - "{{ script_dir }}"
+
+- name: generate whitelist bns if not exits
+  template:
+    src: whitelist_bns.j2
+    dest: "{{ whitelist_file_bns }}"
+    mode: 0644
+    force: no
+
+- name: generate whitelist ip if not exits
+  template:
+    src: whitelist_ip.j2
+    dest: "{{ whitelist_file_ip }}"
+    mode: 0644
+    force: no
+
+- name: generate config if not exits
+  template:
+    src: sentinel.conf.j2
+    dest: "{{ conf_file }}"
+    mode: 0644
+    force: no
+
+- name: generate register redis file if not exits
+  template:
+    src: register_redis.j2
+    dest: "{{ register_file }}"
+    mode: 0644
+    force: no
+
+- name: generate service control scripts if not exits
+  template:
+    src: sentinel_service.sh.j2
+    dest: "{{ sentinel_control_script }}"
+    mode: 0775
+    force: yes
+
+- name: start sentinel if sentinel  stop
+  shell:
+    cmd: "{{ sentinel_control_script }} start {{ sentinel_port }}"
+  register: start_out
+
+- name: check sentinel status
+  debug: msg={{ start_out.stdout }}
+
+- name: register redis master to sentinel
+  shell: "cat {{ register_file }} | {{ sentinel_base_dir }}/bin/redis-cli -p {{ sentinel_port }}"
+  register: add_redis_out
+
+- name: check if add redis ok
+  debug: msg={{ add_redis_out.stdout_lines }}
+
+- name: clear
+  file:
+    path: "{{ package_dir }}"
+    state: absent

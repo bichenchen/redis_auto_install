@@ -1,0 +1,9 @@
+
+{% set app_bns = groups.cluster_bns %}
+{% for bns in app_bns -%}
+  {{ bns }} rw
+{% endfor -%}
+{% set app_bns = groups.app_bns %}
+{% for bns in app_bns -%}
+  {{ bns }} rw
+{% endfor -%}

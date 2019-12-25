@@ -1,0 +1,53 @@
+- name: create depoly dir if not exits
+  file:
+    path: "{{ item }}"
+    mode: 0755
+    force: no
+    state: directory
+  with_items:
+      - "{{ deploy_dir }}"
+
+- name: do the common steps
+  import_tasks: common.yml
+
+- name: generate whitelist bns if not exits
+  template:
+    src: whitelist_bns.j2
+    dest: "{{ whitelist_file_bns }}"
+    mode: 0644
+    force: no
+
+- name: generate whitelist ip if not exits
+  template:
+    src: whitelist_ip.j2
+    dest: "{{ whitelist_file_ip }}"
+    mode: 0644
+    force: no
+
+- name: generate config
+  template:
+    src: redis.conf.j2
+    dest: "{{ conf_file }}"
+    mode: 0644
+    force: no
+
+- name: generate service control scripts
+  template:
+    src: redis_service.sh.j2
+    dest: "{{ control_script }}"
+    mode: 0775
+    force: yes
+
+- name: start redis and only run when pidfile doesn't exits
+  shell:
+    cmd: "{{ control_script }} start {{ redis_port }}"
+    creates: "{{ pidfile }}"
+  register: start_out
+
+- name: check redis status
+  debug: msg={{ start_out.stdout }}
+
+- name: clear
+  file:
+    path: "{{ package_dir }}"
+    state: absent

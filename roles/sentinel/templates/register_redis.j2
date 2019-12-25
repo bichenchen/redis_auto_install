@@ -1,0 +1,12 @@
+{% set redis_hosts = groups.redis_master %}
+{% set count=0 %}
+{% for host in redis_hosts -%}
+  {% set count=count+1 %}
+  {% set redis_ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) -%}
+  {% set redis_port = hostvars[host].redis_port -%}
+sentinel monitor {{ cluster_name }}-server{{count}} {{ redis_ip }} {{ redis_port }} 2
+sentinel set {{ cluster_name }}-server{{count}} down-after-milliseconds 20000
+sentinel set {{ cluster_name }}-server{{count}} parallel-syncs 1
+sentinel set {{ cluster_name }}-server{{count}} failover-timeout 90000
+{% endfor -%}
+

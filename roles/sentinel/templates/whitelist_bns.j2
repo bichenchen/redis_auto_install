@@ -1,0 +1,4 @@
+{% set cluster_bns = groups.cluster_bns %}
+{% for bns in cluster_bns -%}
+  {{ bns }} x
+{% endfor -%}

@@ -1,0 +1,8 @@
+- name: start redis and only run when pidfile doesn't exits
+  shell:
+    cmd: "netstat -nltp|grep {{ sentinel_port }}|awk '{print $4}'|rev|cut -d':' -f1|rev" 
+  register: out
+
+- name: deploy if {{ sentinel_port }} not exits
+  import_tasks: sentinel.yml
+  when: out.rc == 0 and out.stdout  == ""

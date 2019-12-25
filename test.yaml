@@ -1,0 +1,9 @@
+- hosts: sentinel
+  tasks:
+  #- debug: msg={{ hostvars[inventory_hostname].ansible_default_ipv4.address }}
+  #- debug: msg={{ hostvars[master_host] }}
+  #- debug: msg={{ groups['redis_master'] }}
+  #- debug: msg={{ hostvars['m1'].redis_port}}
+  #- debug: msg={{ hostvars['m1'].ansible_host}}
+  - debug: msg={{ maxmemory_policy }}
+  #- template: src=roles/sentinel/templates/register_redis.j2 dest=/tmp/register_redis 

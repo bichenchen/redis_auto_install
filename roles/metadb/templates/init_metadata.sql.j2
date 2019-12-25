@@ -1,0 +1,40 @@
+{% set cluster_name=vars.cluster_name %}
+{% set redis_bns=groups.redis_bns|join(',') %}
+{% set sentinel_bns=groups.sentinel_bns|join(',') %}
+{% set nutcracker_bns=groups.nutcracker_bns|join(',') %}
+{% set masters=groups.redis_master %}
+{% for master in masters %}
+{% set master_host=hostvars[master].ansible_host %}
+{% set master_port=hostvars[master].redis_port %}
+replace into redis_instance (cluster_name,ip,port,bns,role) values("{{ cluster_name }}","{{ master_host }}",{{ master_port }},"{{ redis_bns }}","Master");
+{% endfor %}
+{% set hosts=groups.redis_replication %}
+{% for host in hosts %}
+{% set ip=hostvars[host].ansible_host %}
+{% set redis_port=hostvars[host].redis_port %}
+replace into redis_instance (cluster_name,ip,port,bns,role) values("{{ cluster_name }}","{{ ip }}",{{ redis_port }},"{{ redis_bns }}","Slave");
+{% endfor %}
+{% set hosts=groups.sentinel %}
+{% for host in hosts %}
+{% set sentinel_port=hostvars[host].sentinel_port %}
+{% set ip=hostvars[host].ansible_host %}
+{% set port=hostvars[host].sentinel_port %}
+replace into sentinel_instances (cluster_name,ip,port,bns) values("{{ cluster_name }}","{{ host }}",{{ sentinel_port }},"{{ sentinel_bns }}");
+{% endfor %}
+{% set hosts=groups.nutcracker %}
+{% for host in hosts %}
+{% set nutcracker_port=hostvars[host].nutcracker_port %}
+{% set ip=hostvars[host].ansible_host %}
+replace into proxy_instances(cluster_name,ip,port,bns) values("{{ cluster_name }}","{{ host }}",{{ nutcracker_port }},"{{ nutcracker_bns }}");
+{% endfor %}
+
+{% set cluster_table= vars.cluster_table  %}
+{% set owner=vars.owner %}
+{% set manager=vars.manager %}
+{% set depart=vars.depart %}
+{% set storage_type=vars.storage_type %}
+{% set maxmemory_policy =vars.maxmemory_policy %}
+{% set mote=vars.note %}
+{% set order_id=vars.order_id %}
+{% set op=vars.op %}
+replace into {{cluster_table}}(cluster_name,order_id,department,storage_type,applicant,manager,op,note,max_memory_police) values("{{ cluster_name }}",{{order_id}},"{{depart}}","{{storage_type}}","{{owner}}","{{manager}}","{{op}}","{{note}}","{{maxmemory_policy}}")

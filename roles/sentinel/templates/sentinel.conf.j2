@@ -1,0 +1,7 @@
+port {{ sentinel_port }}
+daemonize yes
+protected-mode no
+logfile {{ logfile_dir }}/sentinel.log
+whitelist yes
+whitelist-file-ip "{{ whitelist_file_ip }}"
+whitelist-file-bns "{{ whitelist_file_bns }}"

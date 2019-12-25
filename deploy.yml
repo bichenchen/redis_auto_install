@@ -1,0 +1,28 @@
+
+- name: deploying redis
+  hosts: redis
+  tags:
+    - redis
+  roles:
+    - redis
+
+- name: deploying sentinel
+  hosts: sentinel
+  tags:
+    - sentinel
+  roles:
+    - sentinel
+
+- name: deploying nutcracker
+  hosts: nutcracker
+  tags:
+    - nutcracker
+  roles:
+    - nutcracker
+
+- name: init metadata
+  hosts: localhost
+  tags:
+    - metadb
+  roles:
+    - metadb

@@ -1,0 +1,18 @@
+- name: generate meta data sql file
+  template:
+    src: init_metadata.sql.j2
+    dest: init_metadata.sql
+  delegate_to: localhost
+
+- name: Import init metadata sql into mysql 
+  vars: 
+    ansible_python_interpreter: /usr/bin/python3
+  mysql_db:
+    login_host: "1.1.11.1"
+    login_port: 3306
+    login_user: "xxx"
+    login_password: "xx"
+    name: test
+    state: import
+    target: init_metadata.sql
+  delegate_to: localhost

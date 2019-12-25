@@ -1,0 +1,84 @@
+#!/bin/bash
+
+script_file=$0
+option=$1
+port=$2
+args_len=$#
+
+sentinel_conf="{{ deploy_dir }}/sentinel_${port}/conf/sentinel.conf"
+redis_bin="{{ deploy_dir }}/sentinel_${port}/bin"
+#pidfile="/home/work/bichenchen/redis/var/run/redis_${port}.pid"
+#redis_bin="/home/work/bichenchen/redis/bin"
+#redis_conf="/home/work/bichenchen/redis/conf/redis_${port}.conf"
+
+function help() {
+    echo -e "\033[31m args ERROR \033[0m"
+    echo "${script_file} status|start|stop sentinel_port"
+    echo "EXAMPLE:"
+    echo "  ${script_file} status 7000"
+    echo "  ${script_file} start 7000"
+    echo "  ${script_file} stop 7000"
+}
+
+function parse_args() {
+    if [ ${args_len} != 2 ];then
+      help
+      exit
+    fi
+    # check port
+    expr ${port} + 0 &>/dev/null
+    if [ $? != 0 ];then
+      help
+      exit
+    fi
+}
+
+function check_process() {
+    process_ok=0
+    flag=`netstat -nltp|awk '{print $4}'|rev|cut -d: -f1|rev|grep ${port}|uniq`
+    if [ "${flag}X" != "X" ];then
+        process_ok=1
+    fi
+    echo ${process_ok}
+}
+
+function main() {
+    parse_args
+    process_ok=$(check_process)
+    case ${option} in
+    "status")
+    if [ "${process_ok}" == 1 ];then
+      echo -e "\033[32m port ${port} is runing \033[0m"
+    else
+      echo -e "\033[31m port ${port} is not runing \033[0m"
+    fi
+    ;;
+    "start")
+    if [ ${process_ok} == 1 ];then
+      echo -e "\033[31m port ${port} is already running \033[0m"
+    else
+      ${redis_bin}/redis-sentinel ${sentinel_conf}
+      if [ $? == 0 ];then
+        echo -e "\033[32m start port ${port} ok \033[0m"
+      else
+        echo -e "\033[31m start port ${port} fail \033[0m"
+      fi
+    fi
+    ;;
+    "stop")
+    if [ ${process_ok} == 0 ];then
+      echo -e "\033[31m port ${port} is already stoped \033[0m"
+    else
+      ${redis_bin}/redis-cli -p ${port} "shutdown"
+      if [ $? == 0 ];then
+        echo -e "\033[32m stop port ${port} ok \033[0m"
+      else
+        echo -e "\033[31m stop port ${port} fail \033[0m"
+      fi
+    fi
+
+    ;;
+    esac
+
+}
+main

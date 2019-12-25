@@ -1,0 +1,5 @@
+{% set app_ip = groups.app_ip %}
+{% for ip in app_ip -%}
+  {{ ip }} rw
+{% endfor -%}
+127.0.0.1 rw

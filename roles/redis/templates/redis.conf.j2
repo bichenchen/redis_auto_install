@@ -1,0 +1,63 @@
+daemonize yes
+pidfile "{{ pidfile }}"
+dir "{{ data_dir }}"
+logfile "{{ logfile_dir }}/redis.log"
+port "{{ redis_port }}"
+dbfilename "dump_{{ redis_port }}.rdb"
+appendfilename  "appendonly_{{ redis_port }}.aof"
+whitelist yes
+whitelist-file-ip "{{ whitelist_file_dir }}/whitelist.ip"
+whitelist-file-bns "{{ whitelist_file_dir }}/whitelist.bns"
+maxmemory-policy {{ maxmemory_policy }}
+
+
+timeout 0
+tcp-keepalive 120
+loglevel notice
+
+databases 16
+stop-writes-on-bgsave-error yes
+rdbcompression yes
+rdbchecksum yes
+protected-mode no
+
+
+slave-serve-stale-data yes
+slave-read-only yes
+repl-timeout 600
+repl-disable-tcp-nodelay no
+repl-backlog-size 200000000
+slave-priority 100
+
+appendonly no
+maxmemory 8589934592
+
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+lua-time-limit 5000
+slowlog-log-slower-than 10000
+slowlog-max-len 128
+hash-max-ziplist-entries 512
+hash-max-ziplist-value 64
+list-max-ziplist-entries 512
+list-max-ziplist-value 64
+set-max-intset-entries 512
+zset-max-ziplist-entries 128
+zset-max-ziplist-value 64
+activerehashing yes
+client-output-buffer-limit normal 0 0 0
+client-output-buffer-limit slave 1000000000 1000000000 600
+client-output-buffer-limit pubsub 32mb 8mb 60
+hz 10
+aof-rewrite-incremental-fsync yes
+
+activedefrag no
+active-defrag-ignore-bytes 500mb
+active-defrag-threshold-lower 50
+active-defrag-threshold-upper 100
+active-defrag-cycle-min 5
+active-defrag-cycle-max 10
+{% set role = hostvars[inventory_hostname].redis_role %}
+{% if role  == "slave" %}
+slaveof {{ hostvars[master_host].ansible_default_ipv4.address }} {{ redis_port }}
+{% endif %}

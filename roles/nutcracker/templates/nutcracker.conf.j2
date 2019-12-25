@@ -1,0 +1,23 @@
+{{ cluster_name }}:
+  listen: 0.0.0.0:{{ nutcracker_port }}
+  hash: fnv1a_64
+  distribution: modula
+  preconnect: true
+  auto_eject_hosts: false
+  redis: true
+  backlog: 512
+  client_connections: 5000
+  server_connections: 1
+  server_retry_timeout: 2000
+  server_failure_limit: 2
+  servers:
+{% set masters=groups.redis_master %}
+{% set count=0 %}
+{% for master in masters %}
+{% set count=count+1 %}
+{% set master_host=hostvars[master].ansible_host %}
+{% set master_port=hostvars[master].redis_port %}
+   - server{{count}}
+     {{ master_host }}:{{ master_port }}:1
+{% endfor %}
+
